@@ -1,5 +1,7 @@
 import requests
 
+from faker import Faker
+
 HOST = "https://petstore3.swagger.io/api/v3"
 PETID = 11
 
@@ -9,4 +11,5 @@ responce = requests.get(
     .format(HOST, PETID)
 )
 
-print(responce.json())
+fake = Faker()
+print(fake.building_number())
