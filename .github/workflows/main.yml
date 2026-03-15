@@ -7,69 +7,23 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
-env:
-  STAGE: prod
-
 jobs:
-  run-tests:
+  test:
     runs-on: ubuntu-latest
-    services:
-      docker:
-        image: docker:24.0.5-dind
-        options: --privileged
     
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐳 Run tests
-        run: |
-          docker compose up api-tests || true
-      
-      - name: 📊 Generate report
-        run: |
-          docker compose up report
-      
-      - name: 📦 Upload report artifact
+      - name: 🐳 Run tests & generate report
+        run: docker compose up --build --abort-on-container-exit
+        env:
+          APIKEY: ${{ secrets.APIKEY }}
+
+      - name: 📊 Upload allure-report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report/
-          retention-days: 10
-
-  pages:
-    runs-on: ubuntu-latest
-    needs: run-tests
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-    
-    permissions:
-      pages: write
-      id-token: write
-    
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
-    steps:
-      - name: 📥 Download report
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report/
-      
-      - name: 📂 Prepare public folder
-        run: |
-          mkdir public
-          cp -r allure-report/* public/
-      
-      - name: 🚀 Setup Pages
-        uses: actions/configure-pages@v4
-      
-      - name: 📤 Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public/
-      
-      - name: 🌐 Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          retention-days: 7
