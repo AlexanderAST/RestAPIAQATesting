@@ -30,3 +30,17 @@ class PetAPI(Helper):
         
         return model
         
+    @allure.step("Get Pet by Id")    
+    def get_pet_by_id(self, id):
+        
+        response = requests.get(
+            url= self.endpoints.get_pet_by_id(id),
+        )
+        
+        assert response.status_code == 200, response.json()
+        
+        self.attach_resonce(response.json())
+        
+        model = PetModel(**response.json())
+        
+        return model
