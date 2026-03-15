@@ -6,21 +6,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/usr/workspace
-      - allure-results:/usr/workspace/allure-results  # ← ВАЖНО: именованный volume
-    command: pytest -sv --alluredir=/usr/workspace/allure-results
+    command: >
+      sh -c "
+        pytest -sv --alluredir=/usr/workspace/allure-results &&
+        allure generate /usr/workspace/allure-results --clean -o /usr/workspace/allure-report
+      "
     working_dir: /usr/workspace
     environment:
       APIKEY: ${APIKEY}
-
-  report:
-    image: api-tests:v1
-    volumes:
-      - ./:/usr/workspace
-      - allure-results:/usr/workspace/allure-results  # ← Тот же volume
-    command: allure generate /usr/workspace/allure-results --clean -o /usr/workspace/allure-report
-    working_dir: /usr/workspace
-    depends_on:
-      - api-tests
-
-volumes:
-  allure-results:  # ← Объявляем volume
